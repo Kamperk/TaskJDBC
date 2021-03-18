@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private static final UserDao user = new UserDaoJDBCImpl();
-    Connection connection = Util.getConnection();
+    private static UserDao user;
+    private final Connection connection = Util.getConnection();
     private UserDaoJDBCImpl() {
     }
     public static UserDao getUser(){
+        if(user!=null){
+            user = new UserDaoJDBCImpl();
+        }
         return user;
     }
 
