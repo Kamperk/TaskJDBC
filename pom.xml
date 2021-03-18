@@ -49,6 +49,8 @@
             <artifactId>hibernate-core</artifactId>
             <version>4.3.10.Final</version>
         </dependency>
+
+
         <dependency>
             <groupId>org.example</groupId>
             <artifactId>TaskJDBC</artifactId>

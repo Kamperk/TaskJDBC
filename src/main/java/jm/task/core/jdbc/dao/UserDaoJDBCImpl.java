@@ -13,7 +13,7 @@ public class UserDaoJDBCImpl implements UserDao {
     private UserDaoJDBCImpl() {
     }
     public static UserDao getUser(){
-        if(user!=null){
+        if(user==null){
             user = new UserDaoJDBCImpl();
         }
         return user;
