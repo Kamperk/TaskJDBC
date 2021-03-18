@@ -8,14 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    public UserDaoJDBCImpl() {
-
+    private static final UserDao user = new UserDaoJDBCImpl();
+    Connection connection = Util.getConnection();
+    private UserDaoJDBCImpl() {
+    }
+    public static UserDao getUser(){
+        return user;
     }
 
     public void createUsersTable() {
         PreparedStatement statement = null;
         try {
-            statement = Util.getConnection().prepareStatement("CREATE table User\n" +
+            statement = connection.prepareStatement("CREATE table User\n" +
                     "(  ID INT AUTO_INCREMENT primary key,\n" +
                     "   Name VARCHAR(45),\n" +
                     "   Lastname VARCHAR(45),\n" +
@@ -28,7 +32,6 @@ public class UserDaoJDBCImpl implements UserDao {
             try {
                 if (statement != null) {
                     statement.close();
-                    Util.getConnection().close();
                 }
             } catch (SQLException e) {
                 System.out.print("Ошибка закрытия");
@@ -39,14 +42,13 @@ public class UserDaoJDBCImpl implements UserDao {
     public void dropUsersTable() {
         PreparedStatement statement = null;
         try {
-            statement = Util.getConnection().prepareStatement("DROP TABLE User");
+            statement = connection.prepareStatement("DROP TABLE User");
             statement.execute();
         } catch (SQLException e) {
         } finally {
             try {
                 if (statement != null) {
                     statement.close();
-                    Util.getConnection().close();
                 }
             } catch (SQLException e) {
                 System.out.print("Ошибка закрытия");
@@ -54,22 +56,24 @@ public class UserDaoJDBCImpl implements UserDao {
         }
     }
 
-    public void saveUser(String name, String lastName, byte age) {
+    public void saveUser(String name, String lastName, byte age) throws SQLException {
         PreparedStatement statement = null;
         try {
-            String sql = "INSERT INTO UserJM.User (Name, Lastname, Age) VALUES (?, ?, ?)";
-            statement = Util.getConnection().prepareStatement(sql);
+            connection.setAutoCommit(false);
+            String sql ="INSERT INTO UserJM.User (Name, Lastname, Age) VALUES (?, ?, ?)";
+            statement = connection.prepareStatement(sql);
             statement.setString(1, name);
             statement.setString(2, lastName);
             statement.setByte(3, age);
             statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             System.out.print("Ошибка соеденения");
+            connection.rollback();
         } finally {
             try {
                 if (statement != null) {
                     statement.close();
-                    Util.getConnection().close();
                 }
             } catch (SQLException e) {
                 System.out.print("Ошибка закрытия");
@@ -80,18 +84,24 @@ public class UserDaoJDBCImpl implements UserDao {
     public void removeUserById(long id) {
         PreparedStatement statement = null;
         try {
+            connection.setAutoCommit(false);
             String sql = "DELETE FROM User\n" +
-                    "where ID = ?;";
-            statement = Util.getConnection().prepareStatement(sql);
+                    "where ID = ?";
+            statement = connection.prepareStatement(sql);
             statement.setLong(1, id);
             statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             System.out.print("Ошибка соеденения");
+            try{
+                connection.rollback();
+            }catch (SQLException p){
+                System.out.print("Ошибка отката");
+            }
         } finally {
             try {
                 if (statement != null) {
                     statement.close();
-                    Util.getConnection().close();
                 }
             } catch (SQLException e) {
                 System.out.print("Ошибка закрытия");
@@ -104,7 +114,7 @@ public class UserDaoJDBCImpl implements UserDao {
         ResultSet resultSet = null;
         List<User> list = new ArrayList<>();
         try {
-            Statement statement = Util.getConnection().createStatement();
+            Statement statement = connection.createStatement();
             String sql = "SELECT * FROM USER";
             resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
@@ -124,19 +134,26 @@ public class UserDaoJDBCImpl implements UserDao {
     public void cleanUsersTable() {
         PreparedStatement statement = null;
         try {
-            String sql = "TRUNCATE TABLE USER ";
-            statement = Util.getConnection().prepareStatement(sql);
+            connection.setAutoCommit(false);
+            String sql = "TRUNCATE TABLE USER;";
+            statement = connection.prepareStatement(sql);
             statement.execute();
+            connection.commit();
         } catch (SQLException e) {
             System.out.print("Ошибка соеденения");
+            try{
+                connection.rollback();
+            }catch (SQLException p){
+                System.out.print("Ошибка отката");
+            }
         } finally {
             try {
-                if (statement != null) {
+                if (statement != null)
+                {
                     statement.close();
-                    Util.getConnection().close();
                 }
             } catch (SQLException e) {
-                System.out.printf("Ошибка закрытия");
+                System.out.print("Ошибка закрытия");
             }
         }
     }
